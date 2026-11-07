@@ -1,0 +1,43 @@
+# Publishes the flying-dragon contribution graph.
+# Install at: .github/workflows/dragon.yml  in the profile repo.
+# Expects the generator at: dragon/generate_dragon.py
+name: Generate Dragon
+
+on:
+  schedule:
+    - cron: "0 */12 * * *"
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+jobs:
+  generate:
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Generate dragon SVGs
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python dragon/generate_dragon.py --user "${{ github.repository_owner }}" --outdir dist
+
+      - name: Publish to output branch
+        uses: crazy-max/ghaction-github-pages@v4
+        with:
+          target_branch: output
+          build_dir: dist
+          # keep_files: the snake workflow publishes to the same branch;
+          # never wipe its files (or vice versa).
+          keep_files: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
