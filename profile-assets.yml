@@ -1,0 +1,59 @@
+# Publishes ALL self-hosted profile assets in ONE merged publish.
+# Install at: .github/workflows/profile-assets.yml  in the profile repo.
+# Expects the generators at: dragon/generate_dragon.py
+#                            cards/generate_cards.py
+#
+# Why a single workflow: crazy-max/ghaction-github-pages@v4 rewrites the
+# target branch with the build dir's contents (its `keep_files` input is
+# unknown/ignored), so when the dragon and cards workflows published to
+# `output` separately, each run deleted the other workflow's files.
+# One workflow -> one merged dist -> one publish -> nothing clobbers.
+name: Profile Assets
+
+on:
+  schedule:
+    - cron: "0 */12 * * *"
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+jobs:
+  generate:
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Generate dragon SVGs
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python dragon/generate_dragon.py --user "${{ github.repository_owner }}" --outdir dist-dragon
+
+      - name: Generate stat cards
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python cards/generate_cards.py --user "${{ github.repository_owner }}" --outdir dist-cards
+
+      - name: Merge outputs into one dist
+        run: |
+          mkdir -p dist
+          cp dist-dragon/*.svg dist/
+          cp dist-cards/*.svg dist/
+          ls -la dist
+
+      - name: Publish to output branch
+        uses: crazy-max/ghaction-github-pages@v4
+        with:
+          target_branch: output
+          build_dir: dist
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
