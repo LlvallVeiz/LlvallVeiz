@@ -256,7 +256,7 @@ def build_route():
             midy = (cy + cy2) / 2
             ry = (cy2 - cy) / 2
             rx = 20
-            steps = 6
+            steps = 12
             for k in range(1, steps + 1):
                 phi = -math.pi / 2 + math.pi * k / steps
                 x = xb + d * rx * math.cos(phi)
@@ -381,37 +381,27 @@ def burn_times(segs, samples, pass_ranges, duration, total_len):
 
 
 # ------------------------------------------------------------------ dragon
-def dragon_inner(pal, scheme):
-    """Chinese-dragon artwork (flip-group content), facing +x.
+def head_inner(pal, scheme):
+    """Head-station artwork (facing +x), centred on the motion origin.
 
-    Long serpentine stroked body, NO wings: antler horns, whiskers, a
-    flowing mane, dorsal finlets, two clawed legs tucked along the body
-    and a flame tail tuft. The lead ("lead", black) dragon breathes a
-    small gold-white plume; the trailing ("follow", white) dragon does
-    not. A slow whole-body undulation (rotate +-2 deg) wraps the art and
-    the mane shimmers via an opacity pulse. `scheme` is "lead"/"follow".
+    Only the head lives on this station: skull, antler horns, whiskers,
+    flowing mane, eye, breath plume (lead only), the front clawed leg
+    and the small dorsal fin behind the skull. The body is NOT drawn
+    here any more -- it is a chain of round stations (see BODY_STATIONS)
+    that bend along the flight path.
     """
     d = pal[scheme]
     body = d["body"]
-    outline = d["outline"]
     mane = d["mane"]
     mane_stroke = d["mane_stroke"]
     horn = d["horn"]
-    belly = d["belly"]
     fin = d["fin"]
-    body_path = ("M -52 2 C -46 -6, -38 -9, -30 -6 C -22 -3, -18 4, -10 5.5 "
-                 "C -2 7, 4 3, 10 -0.5 C 14 -3, 17 -3.5, 21 -3")
-    outline_path = ""
-    if outline != "none":
-        outline_path = (f'<path d="{body_path}" fill="none" '
-                        f'stroke="{outline}" stroke-width="10.6" '
-                        f'stroke-linecap="round"/>')
     mane_stroke_attr = ""
     if mane_stroke != "none":
         mane_stroke_attr = f' stroke="{mane_stroke}" stroke-width="0.6"'
     edge_attr = ""
-    if outline != "none":
-        edge_attr = f' stroke="{outline}" stroke-width="0.8"'
+    if d["outline"] != "none":
+        edge_attr = f' stroke="{d["outline"]}" stroke-width="0.8"'
     und = "2.4s" if scheme == "lead" else "2.9s"
     shim = "2.8s" if scheme == "lead" else "3.4s"
     breath = ""
@@ -428,18 +418,12 @@ def dragon_inner(pal, scheme):
         </g>"""
     return f"""
     <g>
-      <animateTransform attributeName="transform" type="rotate" values="-2 0 0; 2 0 0; -2 0 0" dur="{und}" repeatCount="indefinite"/>
-      <!-- tail flame tuft -->
-      <path d="M -52 2 C -57 -1.5, -59.5 -5, -59 -9.5 C -55.8 -6.2, -54.6 -3.4, -55 -0.2 C -53.2 -1.8, -51.4 -2, -49.8 -1 C -51.4 0.6, -51.8 2.4, -51 4.6 C -53 3.9, -53.6 3.2, -52 2 Z" fill="{fin}" opacity="0.95"/>
-      <!-- serpentine body -->
-      {outline_path}
-      <path d="{body_path}" fill="none" stroke="{body}" stroke-width="8.5" stroke-linecap="round"/>
-      <path d="{body_path}" transform="translate(0,2.3)" fill="none" stroke="{belly}" stroke-width="3" stroke-linecap="round"/>
-      <!-- dorsal finlets -->
-      <path d="M -45 -6 L -41 -12.5 L -37 -7 Z M -26 -5 L -22 -11.5 L -18 -6 Z M -6 2.6 L -2 -3.5 L 2 1.8 Z M 7 -3.4 L 11 -9.5 L 15 -4.4 Z" fill="{fin}"/>
-      <!-- clawed legs, tucked along the body -->
-      <path d="M 11 2.8 C 13.6 5.2, 14.4 8.2, 13.6 11.4 L 10.8 10.8 C 11.6 8, 11.2 5.6, 9.8 3.8 Z M -34 -2.5 C -32 -0.2, -31.6 2.6, -32.4 5.6 L -35.2 5 C -34.4 2.2, -34.8 -0.4, -36.2 -2 Z" fill="{body}"{edge_attr}/>
-      <path d="M 11 11.2 L 9.6 13 M 12.4 11.5 L 11.6 13.6 M 13.8 11.3 L 13.6 13.6 M -35 5.3 L -36.4 7.2 M -33.6 5.6 L -34.2 7.8 M -32.3 5.4 L -32.2 7.6" fill="none" stroke="{horn}" stroke-width="0.9" stroke-linecap="round"/>
+      <animateTransform attributeName="transform" type="rotate" values="-1.3 0 0; 1.3 0 0; -1.3 0 0" dur="{und}" repeatCount="indefinite"/>
+      <!-- dorsal fin behind the skull -->
+      <path d="M 7 -3.4 L 11 -9.5 L 15 -4.4 Z" fill="{fin}"/>
+      <!-- front clawed leg -->
+      <path d="M 11 2.8 C 13.6 5.2, 14.4 8.2, 13.6 11.4 L 10.8 10.8 C 11.6 8, 11.2 5.6, 9.8 3.8 Z" fill="{body}"{edge_attr}/>
+      <path d="M 11 11.2 L 9.6 13 M 12.4 11.5 L 11.6 13.6 M 13.8 11.3 L 13.6 13.6" fill="none" stroke="{horn}" stroke-width="0.9" stroke-linecap="round"/>
       <!-- head -->
       <g transform="translate(22,-3)">
         <!-- flowing mane -->
@@ -470,17 +454,32 @@ def dragon_inner(pal, scheme):
     </g>"""
 
 
-def dragon_group(pal, scheme, duration, path_d, flip_values, flip_key_times,
-                 begin="0s"):
-    """One dragon on the shared route.
+# ------------------------------------------------------- segmented body
+# v3.1 smoothness rework: the dragon is a CHAIN of stations riding the
+# same flight path, each with a negative `begin` offset equal to its
+# arc-length distance behind the head -- the same trick that parks the
+# white dragon half a loop behind the black one. The body therefore
+# bends through the U-turns segment by segment (like the old snake)
+# instead of sliding around them as one rigid drawing. Round stations
+# need no orientation; the finned stations, rear legs and tail tuft
+# carry the discrete facing flip with the SAME delayed begin, so each
+# part flips when IT reaches the turn.
+BODY_STATIONS = [  # (px behind head origin, radius)
+    (2.0, 4.1), (8.0, 4.4), (14.0, 4.55), (20.0, 4.5), (26.0, 4.3),
+    (32.0, 4.0), (38.0, 3.6), (43.5, 3.1), (48.5, 2.55), (53.5, 2.0),
+]
+FIN_STATIONS = {14.0, 32.0, 48.5}
+LEG_STATION = 32.0
+TAIL_DIST = 58.0
 
-    The trailing dragon passes begin="-D/2" for BOTH its animateMotion and
-    its flip animation; because the loop is periodic with period D, that
-    parks it exactly where the lead dragon was half a loop earlier.
-    """
+
+def _station_wrap(duration, total_len, path_d, flip_values, flip_key_times,
+                  base_begin, dist, inner):
+    """One station riding the path `dist` px behind the head station."""
+    off = dist * duration / total_len
+    begin = f"{base_begin - off:.3f}s"
     kt = ";".join(f"{v:.4f}" for v in flip_key_times)
     vals = ";".join(flip_values)
-    inner = dragon_inner(pal, scheme)
     return f"""
   <g transform="translate({PASS_XS},{row_cy(0):.0f})">
     <animateMotion begin="{begin}" dur="{duration:.2f}s" repeatCount="indefinite" path="{path_d}"/>
@@ -489,6 +488,65 @@ def dragon_group(pal, scheme, duration, path_d, flip_values, flip_key_times,
 {inner}
     </g>
   </g>"""
+
+
+def _body_station_inner(pal, scheme, dist, r):
+    d = pal[scheme]
+    stroke = ""
+    if d["outline"] != "none":
+        stroke = f' stroke="{d["outline"]}" stroke-width="0.7"'
+    parts = [f'      <circle cx="0" cy="0" r="{r}" fill="{d["body"]}"{stroke}/>']
+    parts.append(f'      <circle cx="0" cy="1.6" r="{r * 0.5:.2f}" fill="{d["belly"]}"/>')
+    if dist in FIN_STATIONS:
+        parts.append(
+            f'      <path d="M {-0.42 * r - 1:.1f} {-r + 0.8:.1f} '
+            f'L 0 {-r - 4.6:.1f} L {0.42 * r + 1:.1f} {-r + 0.8:.1f} Z" '
+            f'fill="{d["fin"]}"/>')
+    if dist == LEG_STATION:
+        edge_attr = ""
+        if d["outline"] != "none":
+            edge_attr = f' stroke="{d["outline"]}" stroke-width="0.8"'
+        parts.append(
+            '      <g transform="translate(33,0)">'
+            f'<path d="M -34 -2.5 C -32 -0.2, -31.6 2.6, -32.4 5.6 '
+            f'L -35.2 5 C -34.4 2.2, -34.8 -0.4, -36.2 -2 Z" '
+            f'fill="{d["body"]}"{edge_attr}/>'
+            f'<path d="M -35 5.3 L -36.4 7.2 M -33.6 5.6 L -34.2 7.8 '
+            f'M -32.3 5.4 L -32.2 7.6" fill="none" stroke="{d["horn"]}" '
+            'stroke-width="0.9" stroke-linecap="round"/></g>')
+    return "\n".join(parts)
+
+
+def _tail_inner(pal, scheme):
+    d = pal[scheme]
+    return ('      <g transform="translate(54.5,0)">'
+            '<path d="M -52 2 C -57 -1.5, -59.5 -5, -59 -9.5 '
+            'C -55.8 -6.2, -54.6 -3.4, -55 -0.2 C -53.2 -1.8, -51.4 -2, '
+            '-49.8 -1 C -51.4 0.6, -51.8 2.4, -51 4.6 C -53 3.9, '
+            f'-53.6 3.2, -52 2 Z" fill="{d["fin"]}" opacity="0.95"/></g>')
+
+
+def dragon_chain(pal, scheme, duration, total_len, path_d, flip_values,
+                 flip_key_times, base_begin=0.0):
+    """A whole dragon: tail, body stations (tail-most first), head last.
+
+    The head station rides at base_begin (0 for the lead, -D/2 for the
+    trailing dragon); every other station is offset further back by its
+    arc-length distance behind the head.
+    """
+    parts = [_station_wrap(duration, total_len, path_d, flip_values,
+                           flip_key_times, base_begin, TAIL_DIST,
+                           _tail_inner(pal, scheme))]
+    for dist, r in reversed(BODY_STATIONS):
+        parts.append(_station_wrap(duration, total_len, path_d,
+                                   flip_values, flip_key_times, base_begin,
+                                   dist,
+                                   _body_station_inner(pal, scheme, dist, r)))
+    parts.append(_station_wrap(duration, total_len, path_d, flip_values,
+                               flip_key_times, base_begin, 0.0,
+                               head_inner(pal, scheme)))
+    return "\n".join(parts)
+
 
 
 # -------------------------------------------------------------------- svg
@@ -524,8 +582,8 @@ def _burn_animate(level_color, empty_color, t_burn, duration):
             + '" keyTimes="' + key_times + '"/>')
 
 
-def build_svg(weeks, pal, duration, path_d, flip_values, flip_key_times,
-              burns):
+def build_svg(weeks, pal, duration, total_len, path_d, flip_values,
+              flip_key_times, burns):
     parts = []
     parts.append(
         f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {SVG_W} {SVG_H}" '
@@ -571,11 +629,11 @@ def build_svg(weeks, pal, duration, path_d, flip_values, flip_key_times,
             parts.append(
                 f'<rect x="{x}" y="{y}" width="{CELL}" height="{CELL}" '
                 f'rx="2" fill="{color}">{title}{anim}</rect>')
-    parts.append(dragon_group(pal, "follow", duration, path_d, flip_values,
-                              flip_key_times,
-                              begin=f"-{duration / 2:.2f}s"))
-    parts.append(dragon_group(pal, "lead", duration, path_d, flip_values,
-                              flip_key_times))
+    parts.append(dragon_chain(pal, "follow", duration, total_len, path_d,
+                              flip_values, flip_key_times,
+                              base_begin=-duration / 2))
+    parts.append(dragon_chain(pal, "lead", duration, total_len, path_d,
+                              flip_values, flip_key_times))
     parts.append("</svg>")
     return "\n".join(parts)
 
@@ -610,8 +668,8 @@ def main():
         "github-contribution-grid-dragon-dark.svg": PALETTES["dark"],
     }
     for name, pal in outputs.items():
-        svg = build_svg(weeks, pal, duration, path_d, flip_values,
-                        flip_key_times, burns)
+        svg = build_svg(weeks, pal, duration, total_len, path_d,
+                        flip_values, flip_key_times, burns)
         path = os.path.join(args.outdir, name)
         with open(path, "w", encoding="utf-8") as fh:
             fh.write(svg)
